@@ -1,0 +1,48 @@
+---
+# Note: Pass variables to roles using the 'vars' dictionary!
+# If variables are passed on the same indentation level as the role, the variable is
+# set correctly inside the role, but following roles will read the *default*
+# value of the variable (as defined inside the role).
+- name: set up the slurm
+  hosts: 
+    - cluster
+  roles: 
+    - role: base
+      tags: base
+    - role: slurm_base
+      tags: slurm_base
+  vars_files:
+    - "vars/{{ cluster }}_slurm.yml"
+    - "vars/{{ cluster }}_secrets.yml"
+
+- name: set up slurm control node
+  hosts: 
+    - controlsrv
+  gather_facts: no
+  roles:
+    - role: slurm_control
+      tags: slurm_control
+  vars_files:
+    - "vars/{{ cluster  }}_slurm.yml"
+
+- name : set slurm accounting
+  hosts: 
+    - controlsrv
+  gather_facts: no
+  roles:
+    - role: slurm_accounting
+      tags: slurm_accounting
+      when: slurm_db is defined
+  vars_files:
+    - "vars/{{ cluster }}_slurm.yml"
+    - "vars/{{ cluster }}_secrets.yml"
+
+- name: set up slurm compute node
+  hosts: 
+    - computesrvs
+  gather_facts: no
+  roles:
+    - role: slurm_compute
+      tags: slurm_compute
+  vars_files:
+    - "vars/{{ cluster }}_slurm.yml"

@@ -1,0 +1,21 @@
+- name: Check QOS already created
+  become: true
+  command: "sacctmgr -n -P show qos {{ qos.name }}"
+  register: check
+  failed_when: false
+  changed_when: false
+  ignore_errors: true
+
+- name: Create QOS
+  become: true
+  command: "sacctmgr -i add qos {{ qos.name }}"
+  when: check.stdout == ''
+
+- name: Apply QOS options
+  become: true
+  command: "sacctmgr -i modify qos {{ qos.name }} set {{ opt | join(' ') }} {% for k,v in vopt.items() %}{{ k }}={{ v | join(',') }} {% endfor %} Flags+={{ flags | join(' ') }} Priority={{ priority }}"
+  vars:
+    priority: "{{ (qos.priority | default(slurm_qos_default.priority)) }}"
+    flags: "{{ (qos.flags | default(slurm_qos_default.flags)) }}"
+    opt: "{{ (qos.options |default([])) }}"
+    vopt: "{{ (qos.vec_options |default({})) }}"

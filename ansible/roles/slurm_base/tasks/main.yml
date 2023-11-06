@@ -1,0 +1,70 @@
+---
+# munge UID/GID must be same across nodes
+# In principle I should create munge user before apt install,
+# but if apt install is done before, here's how to change UID/GID:
+# systemctl stop munge
+# id munge
+# find / -user munge
+# find / -group munge
+# usermod -u 200 munge
+# groupmod -g 200 munge
+# chown -R munge:munge /run/munge /etc/munge /var/log/munge /var/lib/munge
+# systemctl start munge
+- name: Install apt packages
+  become: true
+  apt:
+    name:
+      - slurm-wlm
+      - slurm-wlm-basic-plugins
+      - slurm-wlm-basic-plugins-dev
+      - munge
+      - sendmail
+      - mailutils
+      - chrony
+      - net-tools
+      - libpmi2-0
+    state: present
+    update_cache: true
+
+- name: create directories for slurm
+  become: true
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "slurm"
+  with_items:
+    - /var/run/slurm
+    - /var/lib/slurm/slurmd
+    - /var/lib/slurm/slurmctld
+    - /var/log/slurm
+    # See issue and comments therein
+    # https://github.com/Azure/azure-quickstart-templates/issues/1796
+    - /var/spool/slurmd
+
+- name: Set inventory based node_specs
+  include_tasks: node_specs.yml
+  when: 
+    - inventory_hostname == groups['controlsrv'][0]
+
+- name: Set inventory for all others
+  set_fact:
+    node_specs: "{{ hostvars[groups['controlsrv'][0]]['node_specs'] }}"
+  when: 
+    - inventory_hostname != groups['controlsrv'][0]
+
+
+- name: Copy slurm configuration template
+  become: true
+  template:
+    src: "{{ item }}"
+    owner: "{{ slurm_user }}"
+    dest: "/etc/slurm/{{ item }}"
+    mode: 0644
+  with_items:
+    - slurm.conf
+    - cgroup.conf
+  notify: restart slurmctld
+
+- name: Set timezone to Zurich
+  when: ansible_date_time.tz != 'Europe/Zurich'
+  command: timedatectl set-timezone Europe/Zurich

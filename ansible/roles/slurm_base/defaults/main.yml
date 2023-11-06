@@ -1,0 +1,1 @@
+slurm_mem_factor: 0.94 # Adjust max requestable memory with respect with the total

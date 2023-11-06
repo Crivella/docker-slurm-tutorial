@@ -1,0 +1,17 @@
+- name: restart mysql
+  become: true
+  service:
+    name: mysql
+    state: restarted
+
+- name: restart mariadb
+  become: true
+  service:
+    name: mariadb
+    state: restarted
+
+- name: restart slurmdbd
+  become: true
+  service:
+    name: slurmdbd
+    state: restarted

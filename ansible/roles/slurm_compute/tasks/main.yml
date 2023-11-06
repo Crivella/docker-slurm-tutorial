@@ -1,0 +1,65 @@
+---
+# munge key already created by apt-get install
+# will not overwrite key due to 'creates' flag
+# but useful to avoid prompts
+# Should be invoked after control node has created the key
+- name: copy munge key
+  become: true
+  copy:
+    src: conf/munge.key
+    dest: /etc/munge/munge.key
+
+# munge should start before slurm daemons
+# https://slurm.schedmd.com/quickstart_admin.html
+- name: start munge service
+  become: true
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - munge
+
+- name: start slurmd services
+  become: true
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - slurmd
+# slurmdbd does not exist in SLURM 15.08
+#    - slurmdbd
+
+- name: stop slurmctld services
+  become: true
+  service:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - slurmctld
+  when:
+    - inventory_hostname != groups['controlsrv'][0]
+
+- name: stop chronyd services
+  become: true
+  service:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - chronyd
+
+- name: push chrony conf file
+  become: true
+  template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+  when:
+    - inventory_hostname != groups['controlsrv'][0]
+
+
+- name: start chronyd services
+  become: true
+  service:
+    name: "{{ item }}"
+    state: started
+  with_items:
+    - chronyd

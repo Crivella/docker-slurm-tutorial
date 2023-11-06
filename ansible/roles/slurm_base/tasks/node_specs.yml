@@ -1,0 +1,23 @@
+- name: Set inventory based node_specs
+  set_fact:
+    node_specs: >-
+      {{ node_specs | default([]) + 
+      [
+        {
+          'nodes': item.value,
+          'boards': 1,
+          'sockets': ffacts['processor_count'],
+          'cores': ffacts['processor_cores'],
+          'threads':ffacts['processor_threads_per_core'],
+          'memory': (ffacts['memtotal_mb'] / 1024) | int,
+          'gpus': fvars['gpus'] | default(0),
+        }
+      ] }}
+
+  loop: "{{ groups | dict2items }}"
+  vars:
+    first: "{{ item.value | first }}"
+    fvars: "{{ hostvars[first] }}"
+    ffacts: "{{ fvars['ansible_facts'] }}"
+  when: 
+    - "'_nodes' in item.key"

@@ -1,0 +1,7 @@
+- name: restart slurmctld
+  become: true
+  service:
+    name: slurmctld
+    state: restarted
+  when: inventory_hostname == groups['controlsrv'][0]
+  

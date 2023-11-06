@@ -1,0 +1,27 @@
+---
+- name: apt clean
+  become: true
+  listen:
+    - apt clean
+  apt:
+    autoclean: true
+
+- name: remove ~/.cache
+  listen:
+    - apt clean
+    - clean cache
+  file:
+    state: absent
+    path: "${HOME}/.cache"
+
+- name: apt autoremove
+  become: true
+  listen:
+    - apt clean
+  apt:
+    autoremove: true
+
+- name: apt upgrade
+  become: true
+  apt:
+    upgrade: true

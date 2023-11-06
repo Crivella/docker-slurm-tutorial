@@ -1,0 +1,55 @@
+networks:
+  network:
+    name: slurm-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+          gateway: 172.19.0.1
+          
+services:
+  control:
+    build: .
+    # image: "ubuntu:22.04"
+    hostname: control 
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /run
+      - /run/lock
+    networks:
+      network:
+        ipv4_address: 172.19.0.2
+    extra_hosts: &extra_hosts
+      - "control:172.19.0.2"
+      - "node1:172.19.0.3"
+      - "node2:172.19.0.4"
+
+  compute1:
+    build: .
+    # image: "ubuntu:22.04"
+    hostname: node1
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /run
+      - /run/lock
+    networks:
+      network:
+        ipv4_address: 172.19.0.3
+    extra_hosts: *extra_hosts
+
+  compute2:
+    build: .
+    # image: "ubuntu:22.04"
+    hostname: node2
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    tmpfs:
+      - /run
+      - /run/lock
+    networks:
+      network:
+        ipv4_address: 172.19.0.4
+    extra_hosts: *extra_hosts
+    

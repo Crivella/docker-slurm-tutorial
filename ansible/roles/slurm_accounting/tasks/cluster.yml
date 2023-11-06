@@ -1,0 +1,13 @@
+- name: Check account already created
+  become: true
+  command: "sacctmgr -n -P show cluster {{ cluster }}"
+  register: check
+  failed_when: false
+  changed_when: false
+  ignore_errors: true
+
+- name: Create account
+  become: true
+  command: "sacctmgr -i add cluster {{ cluster }}"
+  when: check.stdout == ''
+  

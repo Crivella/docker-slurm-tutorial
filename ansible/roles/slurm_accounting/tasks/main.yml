@@ -1,0 +1,97 @@
+---
+# Install and setup MySQL and slurmdbd
+- name: Install apt packages
+  become: true
+  apt:
+    name:
+      - slurmdbd
+      - "{{ (slurm_db.service == 'mysql') | ternary('mysql-server', 'mariadb-server') }}"
+      - python3-pymysql # needed for community.mysql
+    state: present
+    update_cache: true
+  
+
+- name: touch log file
+  copy:
+    content: ""
+    dest: "{{ slurm_log_dir }}/slurmdbd.log"
+    force: no
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
+    mode: '0600'
+
+- name: touch pid file
+  copy:
+    content: ""
+    dest: /run/slurmdbd.pid
+    force: no
+    owner: "{{ slurm_user }}"
+    group: "{{ slurm_group }}"
+    mode: '0644'
+
+- name: Copy mysql configuration template
+  become: true
+  template:
+    src: mysqld.conf
+    owner: "root"
+    dest: /etc/mysql/mysql.conf.d/mysqld.cnf
+  notify: restart mysql
+  when: slurm_db.service == "mysql"
+
+- name: Copy mariadb config file
+  template:
+    src: mariadb.cnf
+    dest: /etc/mysql/mariadb.cnf
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart mariadb
+  when: slurm_db.service != "mysql"
+
+# mysql: GRANT ALL ON slurm_acct_db.* TO 'slurm'@'controlsrv' IDENTIFIED BY 'password' WITH GRANT OPTION;
+- name: Create user slurm with password, all database privileges and 'WITH GRANT OPTION' in slurm_acct_db
+  community.mysql.mysql_user:
+    state: present
+    name: "{{ slurm_db.db_user}}"
+    # check_implicit_admin: yes
+    host: "{{ groups['controlsrv'] | first }}"
+    # https://stackoverflow.com/questions/6885164/pymysql-cant-connect-to-mysql-on-localhost
+    login_unix_socket: /run/mysqld/mysqld.sock
+    password: "{{ slurm_db.db_pass }}"
+    priv:
+      'slurm_acct_db.*': 'ALL,GRANT'
+
+# mysql: create database slurm_acct_db;
+- name: Create database 'slurm_acct_db'
+  community.mysql.mysql_db:
+    name: slurm_acct_db
+    state: present
+    login_unix_socket: /run/mysqld/mysqld.sock
+
+# Configure slurmdbd
+- name: Copy slurmdbd configuration template
+  become: true
+  template:
+    src: slurmdbd.conf
+    owner: "slurm"
+    mode: "600"
+    dest: /etc/slurm/slurmdbd.conf
+  notify: restart slurmdbd
+
+- name: flush
+  ansible.builtin.meta: flush_handlers
+
+- name: Create cluster
+  include_tasks: cluster.yml
+
+- name: Create accounts
+  include_tasks: account.yml
+  loop: "{{ slurm_accounts }}"
+  loop_control:
+    loop_var: account
+
+- name: Create QOSs
+  include_tasks: qos.yml
+  loop: "{{ slurm_qos }}"
+  loop_control:
+    loop_var: qos

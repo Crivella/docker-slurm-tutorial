@@ -1,0 +1,60 @@
+---
+# munge key already created by apt-get install
+# will not overwrite key due to 'creates' flag
+# but useful to avoid prompts
+- name: create munge key
+  become: true
+  command: /usr/sbin/create-munge-key -f
+  args:
+    creates: "/etc/munge/munge.key"
+  
+- name: download munge key
+  fetch:
+    src: /etc/munge/munge.key
+    dest: conf/
+    # store to theos-servers-ansible/conf/munge.key
+    flat: yes
+
+# munge should start before slurm daemons
+# https://slurm.schedmd.com/quickstart_admin.html
+- name: start munge service
+  become: true
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - munge
+
+- name: start slurm services
+  become: true
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - slurmctld
+    # - slurmd
+# slurmdbd does not exist in SLURM 15.08
+#    - slurmdbd
+
+- name: stop chronyd services
+  become: true
+  service:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - chronyd
+
+- name: push chrony conf file
+  become: true
+  template:
+    src: conf/chrony.conf.control
+    dest: /etc/chrony/chrony.conf
+
+- name: start chronyd services
+  become: true
+  service:
+    name: "{{ item }}"
+    state: started
+  with_items:
+    - chronyd
+        
