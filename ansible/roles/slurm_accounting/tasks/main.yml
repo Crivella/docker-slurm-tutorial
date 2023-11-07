@@ -35,8 +35,15 @@
     src: mysqld.conf
     owner: "root"
     dest: /etc/mysql/mysql.conf.d/mysqld.cnf
-  notify: restart mysql
+  register: mysql_config
   when: slurm_db.service == "mysql"
+
+- name: Restart mysql service
+  become: true
+  service:
+    name: mysql
+    state: restarted
+  when: mysql_config.changed
 
 - name: Copy mariadb config file
   template:
@@ -45,8 +52,15 @@
     owner: root
     group: root
     mode: '0644'
-  notify: restart mariadb
+  register: mariadb_config
   when: slurm_db.service != "mysql"
+
+- name: Restart mariadb service
+  become: true
+  service:
+    name: mariadb
+    state: restarted
+  when: mariadb_config.changed
 
 # mysql: GRANT ALL ON slurm_acct_db.* TO 'slurm'@'controlsrv' IDENTIFIED BY 'password' WITH GRANT OPTION;
 - name: Create user slurm with password, all database privileges and 'WITH GRANT OPTION' in slurm_acct_db
@@ -76,7 +90,14 @@
     owner: "slurm"
     mode: "600"
     dest: /etc/slurm/slurmdbd.conf
-  notify: restart slurmdbd
+  register: slurmdbd_config
+
+- name: Restart slurmdbd service
+  become: true
+  service:
+    name: slurmdbd
+    state: restarted
+  when: slurmdbd_config.changed
 
 - name: flush
   ansible.builtin.meta: flush_handlers
