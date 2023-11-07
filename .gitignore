@@ -1,0 +1,4 @@
+ansible.log
+.vscode
+secrets
+munge.key
