@@ -41,5 +41,8 @@ RUN cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
 EXPOSE 22
 
 RUN DEBIAN_FRONTEND=noninteractive apt install -y slurm-wlm slurm-wlm-basic-plugins slurm-wlm-basic-plugins-dev munge sendmail mailutils chrony libpmi2-0
+RUN apt install -y slurmdbd mysql-server python3-pymysql
+
+RUN systemctl disable slurmctld slurmdbd mysql
 
 CMD ["/sbin/init", "2>&1"]
