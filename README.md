@@ -4,11 +4,15 @@ This is a repo for creating a mock [slurm](https://slurm.schedmd.com/documentati
 The idea is to launch the containers as an uninitialized machine and than deploy slurm on them using ansible.
 After that you can go inside the containers and play with all the configurations
 
-# Usage
+## Usage
 
-Run the following command to bring up the docker containers:
+Run the following command to bring up the docker containers (`--remove-orphans` is used to remove services that are no longer recognized after modifying the compose file):
 
-    docker compose up --build -d
+    docker compose up --build -d --remove-orphans
+
+In order to start from the beginning (e.g. for a new example) you can remove the created containers by running:
+
+    docker compose rm -fs
 
 If not already available, [install ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 
@@ -27,3 +31,4 @@ Or spawn a shell inside of it (change container name id needed):
 ## Exampled
 
 - [Run a simple job and modify a QoS](example1/README.md)
+- [Add new nodes to an existing partition](example2/README.md)

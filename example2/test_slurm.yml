@@ -76,14 +76,8 @@ slurm_db:
 slurm_partitions:
   - name: jobs
     nodes: 
-      - "node[1-2]"
+      - "node[1-4]"
     default: yes
-    max_time: "INFINITE"
-    state: present
-    priority_tier: 5
-  - name: jobs2
-    nodes: 
-      - "node[3-4]"
     max_time: "INFINITE"
     state: present
     priority_tier: 5
