@@ -1,8 +1,8 @@
 # Trial slurm installation in docker
 
-This is a repo for creating a mock [slurm](https://slurm.schedmd.com/documentation.html) installation inside a group of docker containers.
-The idea is to launch the containers as an uninitialized machine and than deploy slurm on them using ansible.
-After that you can go inside the containers and play with all the configurations
+This is a repo for creating a mock [slurm](https://slurm.schedmd.com/documentation.html) installation inside a docker cluster
+The idea is to launch the containers as an uninitialized machine and than deploy slurm on them using ansible (following the [Infrastructure as Code (IaC)](https://en.wikipedia.org/wiki/Infrastructure_as_code) paradigm).
+After that you can go inside the containers and play with all the configurations or follow the examples.
 
 ## Usage
 

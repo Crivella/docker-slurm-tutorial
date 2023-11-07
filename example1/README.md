@@ -51,3 +51,17 @@ Let's now edit the `hello.sh` script by modifying the number of nodes requested 
     node2
 
 Now we get output printed both by `node1` and `node2` (order of the lines might vary).
+
+## Use the ansible script to modify the QoS
+
+In the Ansible script, the QoS is set in the accounting role and is controlled by the `slurm_qos` mapping
+
+You can modify the line `"node=1"` to `node=2` inside the `test_slurm.yml` in the block:
+
+    - name: normal
+      priority: 100
+      vec_options: # Used for whem multiple options can be set comma separated. EG: MaxTRESPerUser=node=4,cpus=32
+          MaxTRESPerUser:
+          - "node=1"
+
+and re-run the script to modify the QoS using the script and having your cluster setup following the IaC paradigm.
