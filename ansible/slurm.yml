@@ -1,14 +1,8 @@
 ---
-# Note: Pass variables to roles using the 'vars' dictionary!
-# If variables are passed on the same indentation level as the role, the variable is
-# set correctly inside the role, but following roles will read the *default*
-# value of the variable (as defined inside the role).
 - name: set up the slurm
   hosts: 
     - cluster
   roles: 
-    - role: base
-      tags: base
     - role: slurm_base
       tags: slurm_base
   vars_files:

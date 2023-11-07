@@ -1,15 +1,4 @@
 ---
-# munge UID/GID must be same across nodes
-# In principle I should create munge user before apt install,
-# but if apt install is done before, here's how to change UID/GID:
-# systemctl stop munge
-# id munge
-# find / -user munge
-# find / -group munge
-# usermod -u 200 munge
-# groupmod -g 200 munge
-# chown -R munge:munge /run/munge /etc/munge /var/log/munge /var/lib/munge
-# systemctl start munge
 - name: Install apt packages
   become: true
   apt:
