@@ -45,4 +45,6 @@ RUN apt install -y slurmdbd mysql-server python3-pymysql
 
 RUN systemctl disable slurmctld slurmdbd mysql
 
+VOLUME [ "/scratch" ]
+
 CMD ["/sbin/init", "2>&1"]

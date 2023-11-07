@@ -11,6 +11,7 @@ x-node: &node
   build: .
   volumes:
     - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    - ./scratch:/scratch
   tmpfs:
     - /run
     - /run/lock
