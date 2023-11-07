@@ -1,13 +1,13 @@
-- name: Check account already created
+- name: Check cluster already created
   become: true
-  command: "sacctmgr -n -P show cluster {{ cluster }}"
+  command: "sacctmgr -n -P show cluster {{ slurm_cluster }}"
   register: check
   failed_when: false
   changed_when: false
   ignore_errors: true
 
-- name: Create account
+- name: Create cluster
   become: true
-  command: "sacctmgr -i add cluster {{ cluster }}"
+  command: "sacctmgr -i add cluster {{ slurm_cluster }}"
   when: check.stdout == ''
   
