@@ -1,0 +1,60 @@
+networks:
+  network:
+    name: slurm-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.19.0.0/16
+          gateway: 172.19.0.1
+
+x-node: &node
+  build: .
+  volumes:
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    - ./scratch:/scratch
+  tmpfs:
+    - /run
+    - /run/lock
+  extra_hosts:
+    - "control:172.19.0.2"
+    - "node1:172.19.0.3"
+    - "node2:172.19.0.4"  
+    - "node3:172.19.0.5"  
+    - "node4:172.19.0.6"  
+
+services:
+  control:
+    <<: *node
+    hostname: control 
+    networks:
+      network:
+        ipv4_address: 172.19.0.2
+
+  node1:
+    <<: *node
+    hostname: node1
+    networks:
+      network:
+        ipv4_address: 172.19.0.3
+
+  node2:
+    <<: *node
+    hostname: node2
+    networks:
+      network:
+        ipv4_address: 172.19.0.4
+
+  node3:
+    <<: *node
+    hostname: node3
+    networks:
+      network:
+        ipv4_address: 172.19.0.5
+
+  node4:
+    <<: *node
+    hostname: node4
+    networks:
+      network:
+        ipv4_address: 172.19.0.6
+    

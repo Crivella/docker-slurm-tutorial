@@ -1,0 +1,131 @@
+
+slurm_cluster: cluster # Name of the cluster in slurm.conf
+# slurm_control: "{{ groups['controlsrv'] | first }}"
+slurm_control: "control" # Hostname of the ControlMachine in slurm.conf
+slurm_control_internal: "{{ slurm_control }}"
+slurm_control_dns: "control" # used for the mail domain in slurm.conf
+
+# Extra configurations for slurm.conf 
+# Every key/value pair here will be set up  as key = value in slurm.conf
+slurm_config:
+  MpiDefault: "pmi2"
+  ReturnToService: "1"
+  SwitchType: "switch/none"
+
+  TaskPluginParam: "Cores"
+  TaskPlugin: "task/affinity,task/cgroup"
+  SchedulerType: "sched/backfill"
+  SelectType: "select/cons_res"
+  SelectTypeParameters: "CR_Core"
+  EnforcePartLimits: "ALL"
+
+# GRES types available on the cluster
+slurm_gres_types:
+  - gpu
+
+slurm_user: slurm # SLURM user
+slurm_group: slurm # SLURM group
+
+# List of dict( name: List of nodes with GPUs, file: path to the GPU device)
+# slurm_gpu_nodes:
+#   - names:
+#       - "..."
+#     file: /dev/nvidia0
+
+# Slurm directories
+slurm_config_dir: /etc/slurm
+slurm_log_dir: /var/log/slurm
+slurm_pid_dir: /run
+slurm_home_dir: /var/lib/slurm/
+
+# Settings for cgroup.conf https://slurm.schedmd.com/cgroup.conf.html
+# If defined will automatically set ProctrackType to cgroup in slurm.conf
+slurm_cgroup:
+  automount: true
+  task_affinity: false
+  constrain_devices: true
+  constrain_cores: true
+  constrain_ram: true
+
+slurm_pam_adopt: true # Whether to use the slurm_pam_adopt module https://slurm.schedmd.com/pam_slurm_adopt.html
+
+slurm_gather: linux # Slurm JobAcctGatherType
+
+# Settings for the slurm accounting  https://slurm.schedmd.com/accounting.html
+slurm_db:
+  service: mysql
+  st_host: "{{ groups['controlsrv'] | first }}"
+  st_type: "accounting_storage/mysql"
+  db_user: "{{ slurm_user }}"
+  db_host: "{{ slurm_control }}"
+  db_name: slurm_acct_db
+  db_pass: "{{ mysql_slurm_password }}"
+
+# Partitions to be defined in slurm.conf. Possible keys:
+# - nodes (list): List of nodes in the partition
+# - default (bool):  DEFAULT=YES/NO
+# - max_time (str):  MaxTime
+# - min_nodes (int): MinNodes
+# - max_nodes (int): MaxNodes
+# - max_mem_per_node (int): MaxMemPerNode in MB
+# - accounts (list): AllowAccounts
+# - qos (str): QOS
+# - allow_qos (list): AllowQos
+# - deny_qos (list): DenyQos
+# - priority_tier (int): PriorityTier
+slurm_partitions:
+  - name: jobs
+    nodes: 
+      - "node[1-2]"
+    default: yes
+    max_time: "INFINITE"
+    state: present
+    priority_tier: 5
+  - name: jobs2
+    nodes: 
+      - "node[3-4]"
+    max_time: "INFINITE"
+    state: present
+    priority_tier: 5
+
+# List of slurm accounts to be created
+slurm_accounts:
+  - name: test
+
+# This will run a command to create a QOS but they will not be deletet if removed from here
+# The alternative would be to delete all QOS and recreate them, but this could cause running/pending jobs to fail/not-start
+# !!! This will only add/modify options, not remove them. To remove an option set the resource to -1
+slurm_qos:
+  - name: normal
+    priority: 100
+    vec_options: # Used for whem multiple options can be set comma separated. EG: MaxTRESPerUser=node=4,cpus=32
+      MaxTRESPerUser:
+        - "node=1"
+
+  - name: longjobs
+    priority: 80
+    options:
+      - "MaxWall=7-00:00:00"
+    vec_options:
+      GrpTRES:
+        - "node=1"
+      GrpTRESMins:
+        - "cpu=80000000"
+
+
+slurm_qos_default:
+  priority: 100
+  flags:
+    - DenyOnLimit
+
+# Used for generation of the slurm Multifactor Priority Plugin  https://slurm.schedmd.com/priority_multifactor.html
+slurm_priority:
+  reset: "MONTHLY"
+  decay: "0"
+  favor_small: true
+  max_age: "4-0"
+  weight:
+    age: 15000
+    fairshare: 40000
+    job_size: 10000
+    qos: 20000

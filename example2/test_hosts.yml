@@ -1,0 +1,35 @@
+# Installation of slurm should define:
+# - cluster: Group containing all slurm nodes
+#   - controlsrv: the SLURM frontend server (with slurmctld and slurmdbd)
+#   - computesrvs: the SLURM compute nodes (with slurmd)
+#     - *_nodes: Group of nodes with same specs (the facts of the first node will be used to generate the NodeName entry in `slurm.conf`)
+#
+# Use the `node_aliases` var to set aliases in the /etc/hosts
+all:
+  children:
+    cluster:
+      children:
+        controlsrv:
+          hosts:
+            control:
+              ansible_host: 172.19.0.2
+        computesrvs:
+          children:
+            compute_nodes:
+              hosts:
+                node1:
+                  ansible_host: 172.19.0.3
+                node2:
+                  ansible_host: 172.19.0.4
+                node3:
+                  ansible_host: 172.19.0.5
+                node4:
+                  ansible_host: 172.19.0.6
+
+  vars:
+    ansible_user: root
+    ansible_ssh_pass: root
+    ansible_ssh_common_args: '-o StrictHostKeyChecking=no'
+
+    ansible_python_interpreter: '/usr/bin/python3'
+    cluster: test
