@@ -18,17 +18,6 @@
       tags: slurm_control
   vars_files:
     - "vars/{{ cluster  }}_slurm.yml"
-
-- name : set slurm accounting
-  hosts: 
-    - controlsrv
-  gather_facts: no
-  roles:
-    - role: slurm_accounting
-      tags: slurm_accounting
-      when: slurm_db is defined
-  vars_files:
-    - "vars/{{ cluster }}_slurm.yml"
     - "vars/{{ cluster }}_secrets.yml"
 
 - name: set up slurm compute node

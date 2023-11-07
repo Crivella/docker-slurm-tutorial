@@ -104,16 +104,16 @@
   delay: 10
 
 - name: Create cluster
-  include_tasks: cluster.yml
+  include_tasks: sacctmgr_cluster.yml
 
 - name: Create accounts
-  include_tasks: account.yml
+  include_tasks: sacctmgr_account.yml
   loop: "{{ slurm_accounts }}"
   loop_control:
     loop_var: account
 
 - name: Create QOSs
-  include_tasks: qos.yml
+  include_tasks: sacctmgr_qos.yml
   loop: "{{ slurm_qos }}"
   loop_control:
     loop_var: qos

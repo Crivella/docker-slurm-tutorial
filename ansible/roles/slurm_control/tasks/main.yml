@@ -1,7 +1,4 @@
 ---
-# munge key already created by apt-get install
-# will not overwrite key due to 'creates' flag
-# but useful to avoid prompts
 - name: create munge key
   become: true
   command: /usr/sbin/create-munge-key -f
@@ -12,7 +9,6 @@
   fetch:
     src: /etc/munge/munge.key
     dest: conf/
-    # store to theos-servers-ansible/conf/munge.key
     flat: yes
 
 # munge should start before slurm daemons
@@ -25,16 +21,19 @@
   with_items:
     - munge
 
+- name: Setup accounting
+  include_tasks: accounting.yml
+  when: slurm_db is defined
+
 - name: start slurm services
   become: true
   service:
     name: "{{ item }}"
     state: restarted
+    enabled: yes
   with_items:
+    - slurmdbd
     - slurmctld
-    # - slurmd
-# slurmdbd does not exist in SLURM 15.08
-#    - slurmdbd
 
 - name: stop chronyd services
   become: true
