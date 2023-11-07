@@ -6,50 +6,40 @@ networks:
       config:
         - subnet: 172.19.0.0/16
           gateway: 172.19.0.1
-          
+
+x-node: &node
+  build: .
+  volumes:
+    - /sys/fs/cgroup:/sys/fs/cgroup:ro
+  tmpfs:
+    - /run
+    - /run/lock
+  extra_hosts:
+    - "control:172.19.0.2"
+    - "node1:172.19.0.3"
+    - "node2:172.19.0.4"  
+
 services:
   control:
-    build: .
-    # image: "ubuntu:22.04"
+    <<: *node
     hostname: control 
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-    tmpfs:
-      - /run
-      - /run/lock
     networks:
       network:
         ipv4_address: 172.19.0.2
-    extra_hosts: &extra_hosts
-      - "control:172.19.0.2"
-      - "node1:172.19.0.3"
-      - "node2:172.19.0.4"
 
-  compute1:
-    build: .
-    # image: "ubuntu:22.04"
+  node1:
+    <<: *node
     hostname: node1
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-    tmpfs:
-      - /run
-      - /run/lock
     networks:
       network:
         ipv4_address: 172.19.0.3
-    extra_hosts: *extra_hosts
+    cpuset: "0"
 
-  compute2:
-    build: .
-    # image: "ubuntu:22.04"
+  node2:
+    <<: *node
     hostname: node2
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-    tmpfs:
-      - /run
-      - /run/lock
     networks:
       network:
         ipv4_address: 172.19.0.4
-    extra_hosts: *extra_hosts
+    cpuset: "1"
     
