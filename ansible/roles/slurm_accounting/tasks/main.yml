@@ -98,9 +98,10 @@
     name: slurmdbd
     state: restarted
   when: slurmdbd_config.changed
-
-- name: flush
-  ansible.builtin.meta: flush_handlers
+  register: slurmdbd_restart
+  until: slurmdbd_restart.status.ActiveState == "active" # https://stackoverflow.com/questions/63781603/how-can-i-get-ansible-to-wait-until-a-service-is-active
+  retries: 10
+  delay: 10
 
 - name: Create cluster
   include_tasks: cluster.yml
